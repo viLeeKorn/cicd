@@ -1,0 +1,44 @@
+name: deploy
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build-production:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository on Github VM
+        uses: actions/checkout@v2
+
+      - name: Set up our JDK environment # setup JDK environment: mandatory as we need to build  android project
+        uses: actions/setup-java@v1.4.3
+        with:
+          java-version: 1.8
+
+      - name: Run Node in VM
+        uses: actions/setup-node@master
+
+      - name: Install Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 2.7.5
+
+      - name: Install Dependencies
+        run: yarn
+
+      - name: Install Fastlane and Bundle
+        run: |
+          cd android
+          gem install fastlane
+          bundle install
+          cd ..
+      - name: Build and Publish Mobile App
+        run: |
+          cd android
+          bundle exec fastlane android all_lanes
+        env:
+          ANDROID_UPLOAD_KEY_ALIAS: cicd
+          ANDROID_UPLOAD_PASSWORD: Kv9194
