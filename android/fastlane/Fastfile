@@ -1,0 +1,36 @@
+fastlane_require 'dotenv'
+
+before_all do
+  Dotenv.overload('.env')
+end
+
+default_platform(:android)
+
+platform :android do
+  desc "Build apk"
+    lane :build_package do
+        gradle(
+            task: 'assemble',
+            build_type: 'Release',
+            properties: {
+                "android.injected.signing.store.file" => Dir.pwd + "/cicd.keystore",
+                "android.injected.signing.store.password" => ENV["ANDROID_UPLOAD_PASSWORD"],
+                "android.injected.signing.key.alias" => ENV["ANDROID_UPLOAD_KEY_ALIAS"],
+                "android.injected.signing.key.password" => ENV["ANDROID_UPLOAD_PASSWORD"]
+            }
+        )
+    end
+
+    desc "Delete the build directory, generated apk or aab"
+    lane :clean_up do
+        gradle(
+            task: "clean",
+        )
+    end
+
+  desc "Build, delete build"
+    lane :all_lanes do 
+      build_package
+      clean_up
+    end
+end
